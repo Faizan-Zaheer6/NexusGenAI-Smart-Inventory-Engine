@@ -64,8 +64,6 @@ class Settings:
 
     def validate_required(self) -> None:
         missing: list[str] = []
-        if not self.DATABASE_URL:
-            missing.append("DATABASE_URL")
         if not self.JWT_SECRET_KEY or len(self.JWT_SECRET_KEY) < 32:
             missing.append("JWT_SECRET_KEY (min 32 characters)")
         if missing:
@@ -74,7 +72,6 @@ class Settings:
                 + ", ".join(missing)
                 + ". Copy .env.example to .env and configure values."
             )
-
 
 @lru_cache
 def get_settings() -> Settings:
