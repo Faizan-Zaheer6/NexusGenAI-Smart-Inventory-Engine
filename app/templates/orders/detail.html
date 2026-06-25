@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" class="dark"><head><meta charset="UTF-8"><title>Order #{{ order.id }} - NexusAI</title><script src="https://cdn.tailwindcss.com"></script><link href="/static/css/app.css" rel="stylesheet"><style>body{background:#0b0f19;}</style></head>
+<body class="text-slate-200 p-6"><div class="max-w-3xl mx-auto space-y-6">
+<a href="/orders" class="text-indigo-400 text-sm">← All Orders</a>
+<div class="glass-panel p-6 rounded-2xl space-y-4">
+    <div class="flex justify-between"><h1 class="text-2xl font-bold">Order #{{ order.id }}</h1><span class="px-3 py-1 rounded-full text-sm bg-indigo-500/20 text-indigo-400">{{ order.status }}</span></div>
+    <div class="text-sm text-slate-400">Placed {{ order.created_at.strftime('%B %d, %Y at %H:%M') }}</div>
+    <div class="border-t border-slate-800/50 pt-4 space-y-3">{% for item in order.items %}
+    <div class="flex justify-between"><div><div class="font-semibold">{{ item.product.name }}</div><div class="text-xs text-slate-400">Qty {{ item.quantity }} × ${{ "%.2f"|format(item.unit_price) }}</div></div><div class="font-mono">${{ "%.2f"|format(item.quantity * item.unit_price) }}</div></div>{% endfor %}</div>
+    <div class="border-t border-slate-800/50 pt-4 space-y-1 text-sm">
+        <div class="flex justify-between"><span>Subtotal</span><span>${{ "%.2f"|format(order.subtotal) }}</span></div>
+        {% if order.discount_amount %}<div class="flex justify-between text-emerald-400"><span>Discount{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}</span><span>-${{ "%.2f"|format(order.discount_amount) }}</span></div>{% endif %}
+        <div class="flex justify-between font-bold text-lg"><span>Total</span><span class="text-indigo-400">${{ "%.2f"|format(order.total_amount) }}</span></div>
+    </div>
+    <a href="/orders/{{ order.id }}/receipt" class="inline-block bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm">View Receipt</a>
+</div>
+{% if order.status_history %}<div class="glass-panel p-5 rounded-2xl"><h3 class="font-semibold mb-3">Status Timeline</h3>{% for h in order.status_history %}<div class="text-sm text-slate-400 py-1">{{ h.created_at.strftime('%b %d %H:%M') }} — {{ h.old_status or 'New' }} → <b class="text-slate-200">{{ h.new_status }}</b>{% if h.note %} ({{ h.note }}){% endif %}</div>{% endfor %}</div>{% endif %}
+</div></body></html>

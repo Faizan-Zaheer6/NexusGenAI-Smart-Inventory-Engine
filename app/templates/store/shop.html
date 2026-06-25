@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusAI - Premium Storefront</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" />
+    <link href="/static/css/app.css" rel="stylesheet" />
+    <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter'],outfit:['Outfit']}}}}</script>
+    <style>body{background:#0b0f19;background-image:radial-gradient(at 0% 0%,rgba(30,41,59,.5) 0,transparent 50%);}</style>
+</head>
+<body class="font-sans text-slate-200 pb-20 md:pb-0">
+<nav class="glass-panel sticky top-0 z-40 border-b border-slate-800/40 px-4 md:px-6 py-3 flex items-center justify-between">
+    <a href="/" class="font-outfit font-extrabold text-xl bg-gradient-to-r from-white to-indigo-400 bg-clip-text text-transparent">Nexus<span class="text-indigo-500">AI</span></a>
+    <div class="flex items-center gap-2 md:gap-4">
+        {% if current_user and current_user.is_admin %}<a href="/admin" class="hidden sm:inline text-xs font-bold bg-gradient-to-r from-indigo-500 to-purple-600 px-3 py-2 rounded-xl text-white">Admin Panel</a>{% endif %}
+        <button id="theme-toggle" class="p-2 rounded-lg border border-slate-700/50 text-xs">Theme</button>
+        <button data-drawer-target="cart-drawer" data-drawer-show="cart-drawer" data-drawer-placement="right" class="relative p-2 rounded-lg border border-slate-700/50">
+            🛒<span id="cart-badge" class="absolute -top-1 -right-1 bg-indigo-500 text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{{ cart_total_items }}</span>
+            </button>
+        <span class="text-sm hidden sm:inline">{{ current_user.full_name if current_user else 'Guest' }}</span>
+        {% if is_authenticated %}<a href="/orders" class="text-xs text-indigo-400">Orders</a><a href="/wishlist" class="text-xs text-rose-400">Wishlist</a><a href="/logout" class="text-xs text-slate-500">Logout</a>{% else %}<a href="/login" class="text-xs text-indigo-400">Login</a>{% endif %}
+        </div>
+    </nav>
+
+<main class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+    <section class="glass-panel p-6 rounded-2xl"><h1 class="font-outfit text-3xl font-extrabold">Premium Inventory Marketplace</h1><p class="text-slate-400 text-sm mt-1">Search, filter, wishlist, reviews & real-time cart sync.</p></section>
+
+    <form method="get" class="glass-panel p-4 rounded-2xl flex flex-wrap gap-3 items-end">
+        <div class="flex-1 min-w-[200px]"><label class="text-xs text-slate-400">Search</label><input name="search" value="{{ filters.search }}" placeholder="Search products..." class="w-full mt-1 bg-slate-900/60 border border-slate-700/50 rounded-xl px-3 py-2 text-sm"></div>
+        <div><label class="text-xs text-slate-400">Category</label><select name="category" class="mt-1 bg-slate-900/60 border border-slate-700/50 rounded-xl px-3 py-2 text-sm">
+            <option value="all" {% if filters.category=='all' %}selected{% endif %}>All</option>
+            {% for cat in categories %}<option value="{{ cat.name }}" {% if filters.category==cat.name %}selected{% endif %}>{{ cat.name }} ({{ cat.count }})</option>{% endfor %}
+        </select></div>
+        <div><label class="text-xs text-slate-400">Sort</label><select name="sort" class="mt-1 bg-slate-900/60 border border-slate-700/50 rounded-xl px-3 py-2 text-sm">
+            <option value="newest" {% if filters.sort=='newest' %}selected{% endif %}>Newest</option>
+            <option value="price_asc" {% if filters.sort=='price_asc' %}selected{% endif %}>Price ↑</option>
+            <option value="price_desc" {% if filters.sort=='price_desc' %}selected{% endif %}>Price ↓</option>
+            <option value="stock" {% if filters.sort=='stock' %}selected{% endif %}>Stock</option>
+        </select></div>
+        <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm font-semibold">Apply</button>
+    </form>
+
+    <div id="product-grid" class="opacity-0 transition-opacity grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        {% for product in products %}
+        <div class="glass-panel rounded-2xl overflow-hidden cursor-pointer hover:border-indigo-500/30 transition-all" data-product-id="{{ product.id }}">
+            <div class="relative"><img src="{{ product.image_url or 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400' }}" class="w-full h-44 object-cover" alt="">
+                {% if product.flash_sale %}<span class="absolute top-2 right-2 text-[10px] bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full border border-rose-500/30">-{{ product.flash_sale.discount_percent }}%</span>
+                {% elif product.stock > 15 %}<span class="absolute top-2 right-2 text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">In Stock</span>
+                {% elif product.stock > 0 %}<span class="absolute top-2 right-2 text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">Low ({{ product.stock }})</span>
+                {% else %}<span class="absolute top-2 right-2 text-[10px] bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full">Out</span>{% endif %}
+            </div>
+            <div class="p-4 space-y-3">
+                <div><span class="text-[10px] text-indigo-400 uppercase">{{ product.category }}</span><h3 class="font-outfit font-bold">{{ product.name }}</h3>
+                <div class="text-xs text-amber-400">★ {{ product.avg_rating }} ({{ product.review_count }})</div></div>
+                        <div class="flex items-center justify-between">
+                    <span class="font-mono font-bold text-lg">${{ "%.2f"|format(product.effective_price) }}</span>
+                    <div class="flex gap-1">
+                        <button type="button" data-wishlist-id="{{ product.id }}" class="text-lg {% if product.id in wishlist_ids %}text-rose-400{% else %}text-slate-500{% endif %}">♥</button>
+                        <button type="button" data-add-cart="{{ product.id }}" {% if product.stock==0 %}disabled{% endif %} class="px-3 py-1.5 text-xs bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-800 rounded-xl text-white">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}<div class="col-span-full text-center text-slate-500 py-12">No products match your filters.</div>{% endfor %}
+                </div>
+                
+    {% if meta.total_pages > 1 %}
+    <div class="flex justify-center gap-2 flex-wrap">
+        {% for p in range(1, meta.total_pages + 1) %}
+        <a href="/?page={{ p }}&category={{ filters.category }}&search={{ filters.search }}&sort={{ filters.sort }}" class="px-3 py-1.5 rounded-lg text-sm {% if p == meta.page %}bg-indigo-500 text-white{% else %}bg-slate-800 text-slate-400{% endif %}">{{ p }}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
+</main>
+
+<nav class="md:hidden fixed bottom-0 inset-x-0 glass-panel border-t border-slate-800/40 flex justify-around py-3 z-40 text-xs">
+    <a href="/" class="text-indigo-400 font-semibold">Shop</a>
+    <a href="/orders" class="text-slate-400">Orders</a>
+    <button data-drawer-target="cart-drawer" data-drawer-show="cart-drawer" class="text-slate-400">Cart</button>
+    <a href="{% if is_authenticated %}/logout{% else %}/login{% endif %}" class="text-slate-400">{% if is_authenticated %}Logout{% else %}Login{% endif %}</a>
+</nav>
+
+<div id="cart-drawer" class="fixed top-0 right-0 z-50 h-screen p-5 w-80 glass-panel border-l border-slate-800/40 translate-x-full transition-transform" tabindex="-1">
+    <div class="flex justify-between items-center mb-4"><h5 class="font-bold">Shopping Cart</h5><button data-drawer-hide="cart-drawer">✕</button></div>
+    <div id="cart-items-container" class="space-y-4 py-4">{% for item in cart_items %}<div class="flex justify-between border-b border-slate-800/20 pb-3"><div><div class="text-sm font-semibold">{{ item.product.name }}</div><div class="text-xs text-indigo-400 font-mono">${{ "%.2f"|format(item.product.price) }}</div></div><div class="flex gap-2 items-center"><button data-cart-action="decrease" data-item-id="{{ item.id }}">−</button><span>{{ item.quantity }}</span><button data-cart-action="increase" data-item-id="{{ item.id }}">+</button></div></div>{% else %}<p class="text-slate-500 text-sm text-center">Cart empty</p>{% endfor %}</div>
+    <div class="border-t border-slate-800/50 pt-4 space-y-2">
+        <div class="flex justify-between text-sm"><span>Subtotal</span><span id="cart-subtotal" class="font-mono">${{ cart_subtotal }}</span></div>
+        <div class="flex justify-between font-bold"><span>Total</span><span id="cart-total" class="font-mono text-indigo-400">${{ cart_total }}</span></div>
+        <input id="coupon-input" form="checkout-form" name="coupon_code" placeholder="Coupon: SAVE10, FLAT50" class="w-full mt-2 bg-slate-900/60 border border-slate-700/50 rounded-xl px-3 py-2 text-sm">
+        <button type="button" id="apply-coupon-btn" class="w-full mt-2 text-xs border border-indigo-500/30 text-indigo-400 rounded-xl py-2">Apply Coupon</button>
+        <p id="coupon-msg" class="text-xs mt-1 hidden"></p>
+        <form id="checkout-form" action="/orders/checkout" method="POST"><button id="checkout-btn" type="submit" class="w-full mt-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl py-3 text-sm" {% if cart_total_items==0 %}disabled{% endif %}>Checkout</button></form>
+    </div>
+    </div>
+
+<div id="product-modal" class="hidden fixed inset-0 z-50 bg-black/60 items-center justify-center p-4"><div class="glass-panel max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-2xl p-6 relative"><button onclick="closeProductModal()" class="absolute top-4 right-4 text-slate-400">✕</button><div id="product-modal-body"></div></div></div>
+<div id="toast" class="toast fixed bottom-20 md:bottom-6 right-4 z-50 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-lg bg-emerald-500"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
+<script src="/static/js/store.js"></script>
+{% include "shared/chatbot.html" %}
+</body></html>

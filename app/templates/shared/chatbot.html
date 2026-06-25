@@ -1,0 +1,149 @@
+<!-- NexusAI GenAI Floating Chat Widget -->
+<div id="nexus-chat-root" class="fixed bottom-6 right-6 z-[60] font-sans">
+  <button id="nexus-chat-toggle" type="button" aria-label="Open NexusAI Assistant"
+    class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-2xl shadow-indigo-500/30 flex items-center justify-center text-2xl hover:scale-105 transition-transform">
+    ✦
+  </button>
+
+  <div id="nexus-chat-panel" class="hidden absolute bottom-16 right-0 w-[min(100vw-2rem,380px)] h-[min(70vh,520px)] glass-panel rounded-2xl border border-slate-700/50 shadow-2xl flex flex-col overflow-hidden">
+    <div class="px-4 py-3 border-b border-slate-800/50 flex items-center justify-between bg-slate-900/40">
+      <div>
+        <div class="text-sm font-bold text-white">NexusAI Agent</div>
+        <div class="text-[10px] text-indigo-300">Roman Urdu + English · Stock & Analytics</div>
+      </div>
+      <button id="nexus-chat-close" type="button" class="text-slate-400 hover:text-white text-lg leading-none">✕</button>
+    </div>
+
+    <div id="nexus-chat-mode-bar" class="px-3 py-2 flex gap-2 border-b border-slate-800/30 text-[11px]">
+      <button type="button" data-chat-mode="assistant" class="nexus-mode-btn flex-1 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold">Assistant</button>
+      <button type="button" data-chat-mode="analytics" class="nexus-mode-btn flex-1 py-1.5 rounded-lg bg-slate-800/60 text-slate-400 border border-slate-700/40">Analytics</button>
+    </div>
+
+    <div id="nexus-chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
+      <div class="bg-slate-800/50 border border-slate-700/40 rounded-xl px-3 py-2 text-slate-300">
+        Assalam o Alaikum! Main NexusAI hoon. Products, stock, ya admin analytics ke liye pooch sakte hain.
+      </div>
+    </div>
+
+    <div id="nexus-chat-typing" class="hidden px-4 pb-1 text-xs text-indigo-300 flex items-center gap-2">
+      <span class="inline-flex gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:120ms]"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:240ms]"></span>
+      </span>
+      NexusAI soch raha hai...
+    </div>
+
+    <form id="nexus-chat-form" class="p-3 border-t border-slate-800/50 flex gap-2">
+      <input id="nexus-chat-input" type="text" autocomplete="off" placeholder="Ask about stock or analytics..."
+        class="flex-1 bg-slate-900/70 border border-slate-700/50 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50" />
+      <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold">Send</button>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('nexus-chat-root');
+  if (!root) return;
+
+  const toggle = document.getElementById('nexus-chat-toggle');
+  const panel = document.getElementById('nexus-chat-panel');
+  const closeBtn = document.getElementById('nexus-chat-close');
+  const form = document.getElementById('nexus-chat-form');
+  const input = document.getElementById('nexus-chat-input');
+  const messages = document.getElementById('nexus-chat-messages');
+  const typing = document.getElementById('nexus-chat-typing');
+  const modeButtons = root.querySelectorAll('.nexus-mode-btn');
+
+  let mode = 'assistant';
+
+  // Get or create session ID
+  let sessionId = localStorage.getItem('nexus_chat_session_id');
+  if (!sessionId) {
+    sessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('nexus_chat_session_id', sessionId);
+  }
+
+
+  function setMode(next) {
+    mode = next;
+    modeButtons.forEach((btn) => {
+      const active = btn.dataset.chatMode === mode;
+      btn.classList.toggle('bg-indigo-500/20', active);
+      btn.classList.toggle('text-indigo-300', active);
+      btn.classList.toggle('border-indigo-500/30', active);
+      btn.classList.toggle('bg-slate-800/60', !active);
+      btn.classList.toggle('text-slate-400', !active);
+      btn.classList.toggle('border-slate-700/40', !active);
+    });
+  }
+
+  modeButtons.forEach((btn) => btn.addEventListener('click', () => setMode(btn.dataset.chatMode)));
+
+  toggle.addEventListener('click', () => panel.classList.toggle('hidden'));
+  closeBtn.addEventListener('click', () => panel.classList.add('hidden'));
+
+  function appendBubble(text, role) {
+    const el = document.createElement('div');
+    el.className = role === 'user'
+      ? 'ml-8 bg-indigo-500/20 border border-indigo-500/30 rounded-xl px-3 py-2 text-indigo-100 whitespace-pre-wrap'
+      : 'mr-4 bg-slate-800/50 border border-slate-700/40 rounded-xl px-3 py-2 text-slate-200 whitespace-pre-wrap';
+    el.textContent = text;
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function renderAnalyticsTable(rows) {
+    if (!rows || !rows.length) return '';
+    const keys = Object.keys(rows[0]);
+    let html = '<div class="overflow-x-auto mt-2"><table class="w-full text-[11px] border-collapse">';
+    html += '<thead><tr>' + keys.map((k) => `<th class="border border-slate-700/50 px-2 py-1 text-left text-indigo-300">${k}</th>`).join('') + '</tr></thead><tbody>';
+    rows.forEach((row) => {
+      html += '<tr>' + keys.map((k) => `<td class="border border-slate-700/40 px-2 py-1">${row[k] ?? ''}</td>`).join('') + '</tr>';
+    });
+    html += '</tbody></table></div>';
+    return html;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    appendBubble(text, 'user');
+    input.value = '';
+    typing.classList.remove('hidden');
+
+    try {
+      const res = await fetch('/api/v1/ai/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ user_message: text, message: text, mode, session_id: sessionId }),
+      });
+      const payload = await res.json();
+      typing.classList.add('hidden');
+
+      if (!res.ok) {
+        const errMsg = payload?.errors?.[0]?.message || payload?.detail || 'Request failed';
+        appendBubble(String(errMsg), 'bot');
+        return;
+      }
+
+      const data = payload.data || payload;
+      appendBubble(data.answer || 'No response.', 'bot');
+
+      if (data.rows && data.rows.length) {
+        const wrap = document.createElement('div');
+        wrap.className = 'mr-4 bg-slate-900/60 border border-slate-700/40 rounded-xl px-3 py-2 text-slate-200 text-[11px]';
+        wrap.innerHTML = `<div class="text-indigo-300 font-mono mb-1">${data.sql_query || ''}</div>` + renderAnalyticsTable(data.rows);
+        messages.appendChild(wrap);
+        messages.scrollTop = messages.scrollHeight;
+      }
+    } catch (err) {
+      typing.classList.add('hidden');
+      appendBubble('Network error — please retry.', 'bot');
+    }
+  });
+})();
+</script>

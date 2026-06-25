@@ -1,0 +1,9 @@
+/* NexusAI Premium Theme */
+:root { --accent: #6366f1; --glass: rgba(15,23,42,0.45); }
+.glass-panel { background: var(--glass); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
+.skeleton { background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 12px; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.toast { transform: translateY(100px); opacity: 0; transition: all .3s ease; }
+.toast.show { transform: translateY(0); opacity: 1; }
+body.light .glass-panel { background: rgba(255,255,255,0.55); border-color: rgba(15,23,42,0.08); }
+body.light { background-color: #f8fafc; color: #0f172a; }

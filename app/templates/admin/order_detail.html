@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" class="dark"><head><meta charset="UTF-8"><title>Order #{{ order.id }} - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="/static/css/app.css" rel="stylesheet"><style>body{background:#0b0f19;}</style></head>
+<body class="text-slate-200 p-6"><div class="max-w-4xl mx-auto space-y-6">
+<a href="/admin/orders" class="text-indigo-400 text-sm">← All Orders</a>
+<div class="glass-panel p-6 rounded-2xl"><h1 class="text-2xl font-bold mb-2">Order #{{ order.id }}</h1>
+<p class="text-slate-400 text-sm">Customer: {{ order.user.full_name }} · {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+<div class="mt-4 space-y-2">{% for item in order.items %}<div class="flex justify-between text-sm border-b border-slate-800/30 py-2"><span>{{ item.product.name }} × {{ item.quantity }}</span><span class="font-mono">${{ "%.2f"|format(item.quantity * item.unit_price) }}</span></div>{% endfor %}</div>
+<p class="mt-4 font-bold text-lg">Total: <span class="text-indigo-400">${{ "%.2f"|format(order.total_amount) }}</span></p>
+<form action="/admin/orders/{{ order.id }}/status" method="POST" class="mt-6 flex flex-wrap gap-3 items-end">
+    <div><label class="text-xs text-slate-400">Update Status</label><select name="new_status" class="block mt-1 bg-slate-900/60 border border-slate-700/50 rounded-xl px-3 py-2 text-sm">{% for s in statuses %}<option value="{{ s }}" {% if order.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+    <div><label class="text-xs text-slate-400">Note</label><input name="note" class="block mt-1 bg-slate-900/60 border border-slate-700/50 rounded-xl px-3 py-2 text-sm" placeholder="Optional note"></div>
+    <button type="submit" class="bg-indigo-500 text-white px-5 py-2 rounded-xl text-sm font-semibold">Update Status</button>
+</form></div>
+<div class="glass-panel p-5 rounded-2xl"><h3 class="font-semibold mb-3">Status History</h3>{% for h in order.status_history %}<div class="text-sm text-slate-400 py-1">{{ h.created_at.strftime('%b %d %H:%M') }}: {{ h.old_status or '—' }} → {{ h.new_status }}{% if h.note %} — {{ h.note }}{% endif %}</div>{% else %}<p class="text-slate-500 text-sm">No history yet.</p>{% endfor %}</div>
+</div></body></html>

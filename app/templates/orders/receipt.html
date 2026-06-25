@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>Receipt #{{ order.id }}</title><style>body{font-family:Inter,system-ui;max-width:600px;margin:40px auto;padding:20px;color:#111} .header{text-align:center;border-bottom:2px solid #4f46e5;padding-bottom:16px;margin-bottom:24px} table{width:100%;border-collapse:collapse;margin:16px 0} th,td{padding:8px;text-align:left;border-bottom:1px solid #e2e8f0} .total{font-size:1.2em;font-weight:bold;color:#4f46e5} @media print{button{display:none}}</style></head>
+<body>
+<div class="header"><h1>NexusAI</h1><p>Smart Inventory Engine — Invoice</p><p>Order #{{ order.id }} · {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p></div>
+<p><b>Customer:</b> {{ current_user.full_name }}<br><b>Status:</b> {{ order.status }}</p>
+<table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>
+{% for item in order.items %}<tr><td>{{ item.product.name }}</td><td>{{ item.quantity }}</td><td>${{ "%.2f"|format(item.unit_price) }}</td><td>${{ "%.2f"|format(item.quantity * item.unit_price) }}</td></tr>{% endfor %}
+</tbody></table>
+<p>Subtotal: ${{ "%.2f"|format(order.subtotal) }}</p>
+{% if order.discount_amount %}<p>Discount: -${{ "%.2f"|format(order.discount_amount) }}</p>{% endif %}
+<p class="total">Total Paid: ${{ "%.2f"|format(order.total_amount) }}</p>
+<button onclick="window.print()">Print Receipt</button>
+</body></html>

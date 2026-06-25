@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>My Wishlist - NexusAI</title>
+<script src="https://cdn.tailwindcss.com"></script><link href="/static/css/app.css" rel="stylesheet"><style>body{background:#0b0f19;}</style></head>
+<body class="text-slate-200 min-h-screen p-6"><div class="max-w-4xl mx-auto space-y-6">
+<a href="/" class="text-indigo-400 text-sm">← Back to Shop</a>
+<h1 class="text-3xl font-bold">My Wishlist</h1>
+<div class="grid sm:grid-cols-2 gap-4">{% for item in items %}
+<div class="glass-panel p-4 rounded-2xl flex gap-4 items-center">
+<img src="{{ item.product.image_url or 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100' }}" class="w-16 h-16 rounded-lg object-cover" alt="">
+<div class="flex-1"><h3 class="font-semibold">{{ item.product.name }}</h3><p class="text-indigo-400 font-mono">${{ "%.2f"|format(item.product.price) }}</p></div>
+<form action="/cart/add/{{ item.product.id }}" method="POST"><button class="text-xs bg-indigo-500 text-white px-3 py-2 rounded-lg">Add to Cart</button></form>
+</div>{% else %}<p class="text-slate-500 col-span-full text-center py-12">Your wishlist is empty.</p>{% endfor %}</div>
+</div></body></html>

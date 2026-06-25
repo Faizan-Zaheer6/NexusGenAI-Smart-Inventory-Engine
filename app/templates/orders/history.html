@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" class="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>My Orders - NexusAI</title><script src="https://cdn.tailwindcss.com"></script><link href="/static/css/app.css" rel="stylesheet"><style>body{background:#0b0f19;}</style></head>
+<body class="text-slate-200 min-h-screen p-6"><div class="max-w-4xl mx-auto space-y-6">
+<a href="/" class="text-indigo-400 text-sm">← Back to Shop</a>
+<h1 class="text-3xl font-bold">Order History</h1>
+<div class="space-y-4">{% for order in orders %}
+<div class="glass-panel p-5 rounded-2xl flex flex-wrap justify-between items-center gap-4">
+    <div><div class="font-mono text-indigo-400 font-bold">#{{ order.id }}</div><div class="text-sm text-slate-400">{{ order.created_at.strftime('%b %d, %Y %H:%M') }}</div></div>
+    <div class="text-sm"><span class="px-2 py-1 rounded-full text-xs {% if order.status=='Delivered' %}bg-emerald-500/20 text-emerald-400{% elif order.status=='Pending' %}bg-amber-500/20 text-amber-400{% else %}bg-indigo-500/20 text-indigo-400{% endif %}">{{ order.status }}</span></div>
+    <div class="font-mono font-bold text-lg">${{ "%.2f"|format(order.total_amount) }}</div>
+    <div class="flex gap-2"><a href="/orders/{{ order.id }}" class="text-xs bg-slate-800 px-3 py-2 rounded-lg">Details</a><a href="/orders/{{ order.id }}/receipt" class="text-xs bg-indigo-500/20 text-indigo-400 px-3 py-2 rounded-lg">Receipt</a></div>
+</div>{% else %}<p class="text-slate-500">No orders yet. <a href="/" class="text-indigo-400">Start shopping</a></p>{% endfor %}</div>
+</div></body></html>
